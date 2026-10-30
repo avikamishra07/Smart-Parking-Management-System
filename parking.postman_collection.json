@@ -1,0 +1,188 @@
+{
+  "info": {
+    "_postman_id": "a2b72e19-2b31-4ef8-a0e0-7d7e5dbb9e10",
+    "name": "Smart Parking Management REST API",
+    "description": "Verification requests for the Smart Parking Management REST API. Run entry before fare, checkout and payment requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/parking"
+    },
+    {
+      "key": "slotId",
+      "value": "1"
+    },
+    {
+      "key": "bookingId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health and Slots",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "List all slots",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/slots"
+          }
+        },
+        {
+          "name": "List available slots",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/slots/available"
+          }
+        },
+        {
+          "name": "Get slot by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/slots/{{slotId}}"
+          }
+        },
+        {
+          "name": "Slot not found (404 example)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/slots/999999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking lifecycle",
+      "item": [
+        {
+          "name": "Vehicle entry - create booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.id !== undefined) pm.collectionVariables.set('bookingId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"MH31AB1234\",\n  \"slotId\": {{slotId}}\n}"
+            },
+            "url": "{{baseUrl}}/bookings/entry"
+          }
+        },
+        {
+          "name": "Invalid vehicle number (400 example)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"!\",\n  \"slotId\": {{slotId}}\n}"
+            },
+            "url": "{{baseUrl}}/bookings/entry"
+          }
+        },
+        {
+          "name": "Active bookings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings/active"
+          }
+        },
+        {
+          "name": "Calculate live fare",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/fare"
+          }
+        },
+        {
+          "name": "Checkout and bill",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/checkout"
+          }
+        },
+        {
+          "name": "Mark booking paid",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/pay"
+          }
+        },
+        {
+          "name": "Booking not found (404 example)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bookings/999999/fare"
+          }
+        },
+        {
+          "name": "Duplicate active vehicle (409 example)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"MH31AB1234\",\n  \"slotId\": {{slotId}}\n}"
+            },
+            "url": "{{baseUrl}}/bookings/entry"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Daily revenue for a date",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/revenue?date=2026-10-30"
+          }
+        },
+        {
+          "name": "Daily revenue for today (default)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/revenue"
+          }
+        }
+      ]
+    }
+  ]
+}
